@@ -14,6 +14,8 @@
             --accent-hover: #9965f4;
             --border: #333333;
             --note-bg: #2d223d;
+            --btn-secondary: #333333;
+            --btn-secondary-hover: #444444;
         }
 
         body {
@@ -156,7 +158,6 @@
             pointer-events: none;
         }
 
-        /* Arrow for tooltip */
         .tooltip .tooltiptext::after {
             content: "";
             position: absolute;
@@ -196,6 +197,13 @@
             margin-bottom: 15px;
         }
 
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         button {
             background-color: var(--accent);
             color: #000;
@@ -212,6 +220,15 @@
             background-color: var(--accent-hover);
         }
 
+        button.secondary {
+            background-color: var(--btn-secondary);
+            color: var(--text-main);
+        }
+
+        button.secondary:hover {
+            background-color: var(--btn-secondary-hover);
+        }
+
         .range-value {
             margin-left: auto;
             color: var(--accent);
@@ -221,12 +238,34 @@
 </head>
 <body>
 
+<datalist id="common-widths">
+    <option value="1280">1280 (720p / Steam Deck)</option>
+    <option value="1920">1920 (1080p FHD)</option>
+    <option value="2560">2560 (1440p QHD)</option>
+    <option value="3440">3440 (Ultrawide)</option>
+    <option value="3840">3840 (4K UHD)</option>
+</datalist>
+
+<datalist id="common-heights">
+    <option value="720">720 (720p)</option>
+    <option value="800">800 (Steam Deck)</option>
+    <option value="1080">1080 (1080p FHD)</option>
+    <option value="1440">1440 (1440p QHD)</option>
+    <option value="2160">2160 (4K UHD)</option>
+</datalist>
+
 <div class="container">
     <h1>Gamescope Generator</h1>
     
     <div class="vibe-note">
         <strong>Hey there! 👋</strong><br> 
         Just a quick heads-up: This page is "vibe coded". I originally put this together to make my own life easier when tweaking Gamescope launch parameters. It works great for me, and I'm more than happy to share it with everyone else. Feel free to use it!
+    </div>
+
+    <div class="btn-group" style="margin-bottom: 20px;">
+        <button class="secondary" onclick="saveSettings()" id="saveBtn">💾 Save Settings</button>
+        <button class="secondary" onclick="loadSettings()" id="loadBtn">📂 Load Settings</button>
+        <button class="secondary" onclick="resetSettings()">🔄 Reset</button>
     </div>
 
     <div class="grid">
@@ -237,28 +276,28 @@
                     Game Resolution (Width) [-w]
                     <span class="tooltip">?<span class="tooltiptext">The internal rendering width of the game. Lower this to gain performance before upscaling.</span></span>
                 </label>
-                <input type="number" id="gameWidth" placeholder="e.g. 1920">
+                <input type="number" id="gameWidth" list="common-widths" placeholder="e.g. 1920">
             </div>
             <div class="form-group">
                 <label>
                     Game Resolution (Height) [-h]
                     <span class="tooltip">?<span class="tooltiptext">The internal rendering height of the game.</span></span>
                 </label>
-                <input type="number" id="gameHeight" placeholder="e.g. 1080">
+                <input type="number" id="gameHeight" list="common-heights" placeholder="e.g. 1080">
             </div>
             <div class="form-group">
                 <label>
                     Output Resolution (Width) [-W]
                     <span class="tooltip">?<span class="tooltiptext">The actual width of the Gamescope window on your monitor. Usually your native screen width.</span></span>
                 </label>
-                <input type="number" id="outputWidth" placeholder="e.g. 2560">
+                <input type="number" id="outputWidth" list="common-widths" placeholder="e.g. 2560">
             </div>
             <div class="form-group">
                 <label>
                     Output Resolution (Height) [-H]
                     <span class="tooltip">?<span class="tooltiptext">The actual height of the Gamescope window on your monitor.</span></span>
                 </label>
-                <input type="number" id="outputHeight" placeholder="e.g. 1440">
+                <input type="number" id="outputHeight" list="common-heights" placeholder="e.g. 1440">
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="fullscreen" checked>
@@ -356,12 +395,14 @@
     <div class="output-section">
         <label style="text-align: left; color: var(--accent); font-weight: bold; margin-bottom: 10px;">Generated Launch Parameter:</label>
         <textarea id="outputCommand" rows="3" readonly></textarea>
-        <button onclick="copyCommand()">Copy to Clipboard</button>
+        <div class="btn-group">
+            <button onclick="copyCommand()">📋 Copy to Clipboard</button>
+        </div>
     </div>
 </div>
 
 <script>
-    const inputs = document.querySelectorAll('input, select');
+    const inputs = document.querySelectorAll('.grid input, .grid select');
     const outputCommand = document.getElementById('outputCommand');
     const fsrSharpness = document.getElementById('fsrSharpness');
     const fsrVal = document.getElementById('fsrVal');
@@ -417,24 +458,91 @@
         outputCommand.value = cmd.join(' ');
     }
 
-    // Add event listeners to all inputs
+    // Add event listeners to all inputs for real-time generation
     inputs.forEach(input => {
         input.addEventListener('input', generateCommand);
         input.addEventListener('change', generateCommand);
     });
+
+    // --- SAVE / LOAD / RESET FUNCTIONS ---
+    function saveSettings() {
+        const settings = {};
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                settings[input.id] = input.checked;
+            } else {
+                settings[input.id] = input.value;
+            }
+        });
+        localStorage.setItem('gamescopePreset', JSON.stringify(settings));
+        
+        // Button Feedback
+        const btn = document.getElementById('saveBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✔️ Saved!';
+        btn.style.color = '#4caf50';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.color = 'var(--text-main)';
+        }, 1500);
+    }
+
+    function loadSettings() {
+        const saved = localStorage.getItem('gamescopePreset');
+        if (saved) {
+            const settings = JSON.parse(saved);
+            inputs.forEach(input => {
+                if (settings[input.id] !== undefined) {
+                    if (input.type === 'checkbox') {
+                        input.checked = settings[input.id];
+                    } else {
+                        input.value = settings[input.id];
+                    }
+                }
+            });
+            fsrVal.textContent = fsrSharpness.value; // Update slider text
+            generateCommand(); // Re-generate output
+            
+            // Button Feedback
+            const btn = document.getElementById('loadBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✔️ Loaded!';
+            btn.style.color = '#4caf50';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.color = 'var(--text-main)';
+            }, 1500);
+        } else {
+            alert("No saved settings found!");
+        }
+    }
+
+    function resetSettings() {
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                input.checked = (input.id === 'fullscreen'); // Default is only fullscreen checked
+            } else if (input.id === 'fsrSharpness') {
+                input.value = "2";
+            } else {
+                input.value = "";
+            }
+        });
+        fsrVal.textContent = "2";
+        generateCommand();
+    }
 
     // Copy to Clipboard
     function copyCommand() {
         outputCommand.select();
         document.execCommand('copy');
         
-        const btn = document.querySelector('button');
-        const originalText = btn.textContent;
-        btn.textContent = 'Copied! ✔️';
+        const btn = document.querySelector('.output-section button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✔️ Copied!';
         btn.style.backgroundColor = '#4caf50';
         
         setTimeout(() => {
-            btn.textContent = originalText;
+            btn.innerHTML = originalText;
             btn.style.backgroundColor = 'var(--accent)';
         }, 2000);
     }
