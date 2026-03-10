@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamescope Launch Parameter Generator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+            --accent: #bb86fc;
+            --accent-hover: #9965f4;
+            --border: #333333;
+            --note-bg: #2d223d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .vibe-note {
+            background-color: var(--note-bg);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #e0e0e0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            color: var(--text-main);
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            cursor: help;
+            color: var(--accent);
+            background-color: rgba(187, 134, 252, 0.1);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #2a2a2a;
+            color: #fff;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 10;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 0.8rem;
+            font-weight: normal;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        /* Arrow for tooltip */
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--border) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .output-section {
+            margin-top: 30px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #outputCommand {
+            width: 100%;
+            background-color: #000;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            resize: none;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .range-value {
+            margin-left: auto;
+            color: var(--accent);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Gamescope Generator</h1>
+    
+    <div class="vibe-note">
+        <strong>Hey there! 👋</strong><br> 
+        Just a quick heads-up: This page is "vibe coded". I originally put this together to make my own life easier when tweaking Gamescope launch parameters. It works great for me, and I'm more than happy to share it with everyone else. Feel free to use it!
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>🖥️ Resolution & Display</h2>
+            <div class="form-group">
+                <label>
+                    Game Resolution (Width) [-w]
+                    <span class="tooltip">?<span class="tooltiptext">The internal rendering width of the game. Lower this to gain performance before upscaling.</span></span>
+                </label>
+                <input type="number" id="gameWidth" placeholder="e.g. 1920">
+            </div>
+            <div class="form-group">
+                <label>
+                    Game Resolution (Height) [-h]
+                    <span class="tooltip">?<span class="tooltiptext">The internal rendering height of the game.</span></span>
+                </label>
+                <input type="number" id="gameHeight" placeholder="e.g. 1080">
+            </div>
+            <div class="form-group">
+                <label>
+                    Output Resolution (Width) [-W]
+                    <span class="tooltip">?<span class="tooltiptext">The actual width of the Gamescope window on your monitor. Usually your native screen width.</span></span>
+                </label>
+                <input type="number" id="outputWidth" placeholder="e.g. 2560">
+            </div>
+            <div class="form-group">
+                <label>
+                    Output Resolution (Height) [-H]
+                    <span class="tooltip">?<span class="tooltiptext">The actual height of the Gamescope window on your monitor.</span></span>
+                </label>
+                <input type="number" id="outputHeight" placeholder="e.g. 1440">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="fullscreen" checked>
+                <label for="fullscreen">
+                    Fullscreen [-f]
+                    <span class="tooltip">?<span class="tooltiptext">Forces Gamescope to run in fullscreen mode across your display.</span></span>
+                </label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="borderless">
+                <label for="borderless">
+                    Borderless Window [-b]
+                    <span class="tooltip">?<span class="tooltiptext">Runs the game in a borderless window instead of exclusive fullscreen.</span></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>✨ Scaling & Filters</h2>
+            <div class="form-group">
+                <label>
+                    Scaling Mode [-S]
+                    <span class="tooltip">?<span class="tooltiptext">Determines how the image behaves if the game resolution doesn't match the output resolution.</span></span>
+                </label>
+                <select id="scaler">
+                    <option value="">Default (Auto)</option>
+                    <option value="integer">Integer (Pixel Perfect - great for retro)</option>
+                    <option value="fit">Fit (Keep aspect ratio, add black bars)</option>
+                    <option value="fill">Fill (Crop to fill screen)</option>
+                    <option value="stretch">Stretch (Ignore aspect ratio)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    Filter [-F]
+                    <span class="tooltip">?<span class="tooltiptext">The upscaling algorithm. FSR/NIS are fantastic for modern 3D games.</span></span>
+                </label>
+                <select id="filter">
+                    <option value="">Default (Linear)</option>
+                    <option value="nearest">Nearest (Sharp pixels)</option>
+                    <option value="fsr">AMD FSR (FidelityFX Super Resolution)</option>
+                    <option value="nis">NVIDIA NIS (Image Scaling)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    FSR Sharpness [--fsr-sharpness] 
+                    <span class="tooltip">?<span class="tooltiptext">Controls the visual sharpness when using the FSR filter. 2 is a good default.</span></span>
+                    <span id="fsrVal" class="range-value">2</span>
+                </label>
+                <input type="range" id="fsrSharpness" min="0" max="20" value="2" step="1">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Performance & Extras</h2>
+            <div class="form-group">
+                <label>
+                    FPS Limit [-r]
+                    <span class="tooltip">?<span class="tooltiptext">Caps the framerate. Great for saving power or fixing frame-pacing issues.</span></span>
+                </label>
+                <input type="number" id="fpsLimit" placeholder="e.g. 60 (Leave empty for unlimited)">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="hdr">
+                <label for="hdr">
+                    Enable HDR [--hdr-enabled]
+                    <span class="tooltip">?<span class="tooltiptext">Passes HDR metadata. Requires a compatible HDR monitor and OS setup.</span></span>
+                </label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="mangoapp">
+                <label for="mangoapp">
+                    Mangoapp Support [--mangoapp]
+                    <span class="tooltip">?<span class="tooltiptext">Hooks MangoHud into Gamescope so you can see your performance overlay.</span></span>
+                </label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="grabCursor">
+                <label for="grabCursor">
+                    Grab Cursor [-c]
+                    <span class="tooltip">?<span class="tooltiptext">Locks your mouse cursor inside the game window so you don't accidentally click outside.</span></span>
+                </label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="realtime">
+                <label for="realtime">
+                    Realtime Priority [--rt]
+                    <span class="tooltip">?<span class="tooltiptext">Gives Gamescope maximum CPU priority for smoother performance.</span></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-section">
+        <label style="text-align: left; color: var(--accent); font-weight: bold; margin-bottom: 10px;">Generated Launch Parameter:</label>
+        <textarea id="outputCommand" rows="3" readonly></textarea>
+        <button onclick="copyCommand()">Copy to Clipboard</button>
+    </div>
+</div>
+
+<script>
+    const inputs = document.querySelectorAll('input, select');
+    const outputCommand = document.getElementById('outputCommand');
+    const fsrSharpness = document.getElementById('fsrSharpness');
+    const fsrVal = document.getElementById('fsrVal');
+
+    // Update FSR Slider Text
+    fsrSharpness.addEventListener('input', (e) => {
+        fsrVal.textContent = e.target.value;
+    });
+
+    function generateCommand() {
+        let cmd = ['gamescope'];
+
+        // Resolution
+        const gw = document.getElementById('gameWidth').value;
+        const gh = document.getElementById('gameHeight').value;
+        const ow = document.getElementById('outputWidth').value;
+        const oh = document.getElementById('outputHeight').value;
+
+        if (gw) cmd.push(`-w ${gw}`);
+        if (gh) cmd.push(`-h ${gh}`);
+        if (ow) cmd.push(`-W ${ow}`);
+        if (oh) cmd.push(`-H ${oh}`);
+
+        // Window/Fullscreen
+        if (document.getElementById('fullscreen').checked) cmd.push('-f');
+        if (document.getElementById('borderless').checked) cmd.push('-b');
+
+        // FPS Limit
+        const fps = document.getElementById('fpsLimit').value;
+        if (fps) cmd.push(`-r ${fps}`);
+
+        // Scaling & Filters
+        const scaler = document.getElementById('scaler').value;
+        const filter = document.getElementById('filter').value;
+        
+        if (scaler) cmd.push(`-S ${scaler}`);
+        if (filter) cmd.push(`-F ${filter}`);
+        
+        // Apply FSR sharpness only if FSR/NIS is selected
+        if (filter === 'fsr' || filter === 'nis') {
+            cmd.push(`--fsr-sharpness ${fsrSharpness.value}`);
+        }
+
+        // Extras
+        if (document.getElementById('hdr').checked) cmd.push('--hdr-enabled');
+        if (document.getElementById('mangoapp').checked) cmd.push('--mangoapp');
+        if (document.getElementById('grabCursor').checked) cmd.push('-c');
+        if (document.getElementById('realtime').checked) cmd.push('--rt');
+
+        // End of Gamescope flags, add the game execution parameter
+        cmd.push('-- %command%');
+
+        outputCommand.value = cmd.join(' ');
+    }
+
+    // Add event listeners to all inputs
+    inputs.forEach(input => {
+        input.addEventListener('input', generateCommand);
+        input.addEventListener('change', generateCommand);
+    });
+
+    // Copy to Clipboard
+    function copyCommand() {
+        outputCommand.select();
+        document.execCommand('copy');
+        
+        const btn = document.querySelector('button');
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied! ✔️';
+        btn.style.backgroundColor = '#4caf50';
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.backgroundColor = 'var(--accent)';
+        }, 2000);
+    }
+
+    // Initial generation on load
+    generateCommand();
+</script>
+
+</body>
+</html>
